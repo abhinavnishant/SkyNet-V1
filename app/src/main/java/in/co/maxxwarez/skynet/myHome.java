@@ -45,21 +45,22 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
-    protected void createHome(String idString) {
+    protected void createHome(String buttonID, String buttonName) {
 
 
         int id = 0;
         LinearLayout layout = (LinearLayout) findViewById(R.id.homelayout);
 
         Button myHome = new Button(this);
-        myHome.setText(idString);
+        myHome.setText(buttonName);
+        myHome.setTag(buttonID);
         try {
-            id   = Integer.parseInt(idString);
+            id   = Integer.parseInt(buttonName);
         } catch(NumberFormatException nfe) {
 
         }
         myHome.setId(id);
-        myHome.setOnClickListener(handleOnClickHome(id, idString));
+        myHome.setOnClickListener(handleOnClickHome(id, buttonName, buttonID));
         layout.addView(myHome);
 
 
@@ -111,9 +112,9 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
             {
                 if (dataSnapshot.exists()){
                     for (DataSnapshot home : dataSnapshot.getChildren()){
-                        Log.i(TAG, "My Logger onDataChange: 2" + home.child("Name").getValue());
-                        String buttonID = (String) home.child("Name").getValue();
-                        createHome(buttonID);
+                        String buttonID = home.getKey();
+                        String buttonName = (String) home.getValue();
+                        createHome(buttonID, buttonName);
                     }
                 }
             }
@@ -137,20 +138,15 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
 
                     for (final DataSnapshot device : dataSnapshot.getChildren()){
                         final String key = device.getKey();
-                        Log.i(TAG, "My Logger onDataChange 4: " + device.child(key));
-                        Log.i(TAG, "My Logger onDataChange: 5  " + key);
                         final DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference().child("Device").child(key).child("home");
                         Query query1 = ref2;
                         query1.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if(dataSnapshot.exists()){
-                                    Log.i(TAG, "onDataChange: 7" + dataSnapshot.getValue());
                                     createAssignedDevice(key);
                                 }
                                 else{
-                                    Log.i(TAG, "My Logger onDataChange: 6" + device.child(key).child("home"));
-                                    String buttonID =  key;
                                     createDevice(key);
                                 }
 
@@ -162,10 +158,6 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
                             }
                         });
                     }
-                }
-                else
-                {
-                    Log.i(TAG, "OnDataChange76");
                 }
                 mDevice.setText("Your Un-Assigned Devices");
             }
@@ -187,33 +179,32 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
         };
     }
 
-    View.OnClickListener handleOnClickHome(final int buttonID, final  String buttonName){
+    View.OnClickListener handleOnClickHome(final int id, final String buttonName, final String buttonID){
         return new View.OnClickListener() {
             public void onClick(View v) {
-                homeClick (buttonID, buttonName);
+                homeClick (id, buttonName, buttonID);
             }
         };
     }
  private void deviceClick(int buttonID, String buttonName){
      Intent intent = new Intent(this, DeviceDetail.class);
-     Log.i(TAG, "My Logger createActivity: " + buttonID + " " + buttonName);
      intent.putExtra("buttonID", buttonID);
      intent.putExtra("buttonName", buttonName);
      startActivity(intent);
 
  }
 
-    private void homeClick(int buttonID, String buttonName){
+    private void homeClick(int id, String buttonName, String buttonID){
         Intent intent = new Intent(this, HomeDetail.class);
-        Log.i(TAG, "My Logger createActivity: " + buttonID + " " + buttonName);
         intent.putExtra("buttonID", buttonID);
         intent.putExtra("buttonName", buttonName);
+        intent.putExtra("id", id);
         startActivity(intent);
 
     }
 
     @Override
     public void onClick(View v) {
-        Log.i(TAG, "My Logger AA");
+
     }
 }

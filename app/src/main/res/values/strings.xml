@@ -83,6 +83,9 @@
     <string name="add_home">Add Home</string>
     <string name="textAssignedDevice">Your Assigned Devices</string>
     <string name="name12">Name12</string>
+    <string name="textview">TextView</string>
+    <string name="add_config">Add Config</string>
+    <string name="title_activity_device_config">DeviceConfig</string>
 
 
 </resources>

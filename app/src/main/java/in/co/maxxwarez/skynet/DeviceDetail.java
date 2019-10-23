@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,7 +28,9 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
     private TextView mTextView;
     private TextView hTextView;
     private Button mButton;
+    private Button cButton;
     private static final String TAG = "SkyNet";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +39,8 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -42,13 +48,71 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         mTextView = findViewById(R.id.deviceDetail);
         hTextView = findViewById(R.id.textHome);
         mButton = findViewById(R.id.addHome);
+        cButton = findViewById(R.id.addConfig);
         String id = getIntent().getExtras().get("buttonID").toString();
         String name = getIntent().getExtras().get("buttonName").toString();
         mTextView.setText(name);
-        Log.i(TAG, "My Logger onCreate: " + id + " " + name);
         getDeviceHome(id);
         getDeviceDetails(id);
+        getDeviceInfo(id);
+        getDeviceStates(id);
 
+    }
+
+    private void getDeviceInfo(String id) {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Device").child(id);
+        final Query query = ref.child("Data");
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot ip : dataSnapshot.getChildren()){
+                    Log.i(TAG, "onDataChange: " + ip.getKey() + " " + ip.getValue());
+                    createIPRows(ip.getKey(), ip.getValue().toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void getDeviceStates(String id) {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Device").child(id);
+        final Query query = ref.child("State");
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot ip : dataSnapshot.getChildren()){
+                    Log.i(TAG, "onDataChange: " + ip.child("state") + " " + ip.child("state").getValue());
+                   createIPRows(ip.getKey(), ip.child("state").getValue().toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void createIPRows(String key, String value) {
+        TableLayout tl =  findViewById(R.id.table_ip);
+        TableRow row= new TableRow(this);
+        TableRow.LayoutParams lp = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
+        row.setLayoutParams(lp);
+        TextView tv = new TextView(this);
+        TextView qty = new TextView(this);
+        tv.setText(key);
+        qty.setText(value);
+        row.addView(tv);
+        row.addView(qty);
+        qty.setClickable(true);
+        //ahmqty.setOnClickListener(l);
+        tl.addView(row);
     }
 
     private void getDeviceHome(String id) {
@@ -58,7 +122,6 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i(TAG, "My Logger getDeviceDetails 1-1: " + dataSnapshot);
                 if (dataSnapshot.exists()) {
                     DatabaseReference refHome =FirebaseDatabase.getInstance().getReference().child("homes").child(dataSnapshot.getValue().toString());
                     Query query1 = refHome;
@@ -78,6 +141,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
                     mButton.setVisibility(View.GONE);
                     hTextView.setVisibility(View.VISIBLE);
+                    cButton.setVisibility(View.VISIBLE);
 
 
 
@@ -85,6 +149,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
                 else{
                     mButton.setVisibility(View.VISIBLE);
                     hTextView.setVisibility(View.GONE);
+                    cButton.setVisibility(View.GONE);
 
                 }
             }
@@ -103,14 +168,12 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i(TAG, "My Logger getDeviceDetails 1: " + dataSnapshot);
+
                 if (dataSnapshot.exists()) {
 
                     Object deviceType = dataSnapshot.getValue();
                     String device = deviceType.toString();
-
-                    Log.i(TAG, "My Logger getDeviceDetails 2: " + device);
-                    getDeviceInfo(device);
+                    getDeviceInfo_Old(device);
 
                 }
             }
@@ -122,9 +185,8 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void getDeviceInfo(final String deviceType) {
+    private void getDeviceInfo_Old(final String deviceType) {
         //String deviceType = type.toString();
-        Log.i(TAG, "My Logger getDeviceInfo Type: " + deviceType);
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         //String key = ref.child("deviceID");
         Query query = ref.child("DeviceTypes");
@@ -133,14 +195,11 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //Object obj = dataSnapshot.getClass();
-                Log.i(TAG, "My Logger getDeviceInfo 1: " + dataSnapshot);
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot device : dataSnapshot.getChildren()) {
                         String key = device.getKey();
                         if (key.contentEquals(deviceType)) {
                             Object obj = device.child("A").getValue();
-                            Log.i(TAG, "My Logger onDataChange: " + obj);
-
                         }
                     }
                 }
@@ -154,24 +213,22 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    protected void updateHome(FirebaseUser currentUser) {
+    protected  void updateHome(FirebaseUser currentUser){
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("users").child(currentUser.getUid());
         Query query = ref.child("home");
 
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    Log.i(TAG, " My Logger onDataChange 1: " + dataSnapshot);
-                    for (DataSnapshot home : dataSnapshot.getChildren()) {
-                        String buttonName = (String) home.child("Name").getValue();
-                        String buttonID = (String) home.child("ID").getValue();
-                        Log.i(TAG, "My Logger onDataChange 2: " + buttonName + " " + buttonID);
+            public void onDataChange(DataSnapshot dataSnapshot)
+            {
+                if (dataSnapshot.exists()){
+                    for (DataSnapshot home : dataSnapshot.getChildren()){
+                        String buttonID = home.getKey();
+                        String buttonName = (String) home.getValue();
                         createHome(buttonID, buttonName);
                     }
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -180,10 +237,22 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
     }
 
 
+
     @Override
     public void onClick(View v) {
-        updateHome(mAuth.getCurrentUser());
-        mButton.setVisibility(View.GONE);
+        int i = v.getId();
+        if (i == R.id.addHome) {
+            updateHome(mAuth.getCurrentUser());
+            mButton.setVisibility(View.GONE);
+            cButton.setVisibility(View.VISIBLE);
+
+        }
+        if (i == R.id.addConfig) {
+           Intent intent = new Intent(this, DeviceConfig.class);
+           intent.putExtra("deviceID", getIntent().getExtras().get("buttonName").toString());
+           startActivity(intent);
+        }
+
 
     }
 
@@ -206,7 +275,6 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
 
     View.OnClickListener handleOnClickHome(final int id, final String buttonID, final String buttonName) {
-        Log.i(TAG, "My Logger handleOnClickHome: " + buttonID + buttonName);
         return new View.OnClickListener() {
             public void onClick(View v) {
                 homeClick(id, buttonID, buttonName);
@@ -216,13 +284,10 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
 
     private void homeClick(int id, String buttonID, String buttonName) {
-        Log.i(TAG, "My Logger homeClick 1: " + buttonID);
         FirebaseUser currentUser = mAuth.getCurrentUser();
         Intent intent = new Intent(this, DeviceDetail.class);
-        Log.i(TAG, "My Logger createActivity: " + buttonID + " " + buttonName);
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Device").child(mTextView.getText().toString());
         ref.child("home").setValue(buttonID);
-        Log.i(TAG, "My Logger homeClick 2: " + mTextView.getText() + " " + buttonID);
         LinearLayout layout = (LinearLayout) findViewById(R.id.homelayout);
         layout.removeAllViews();
     }

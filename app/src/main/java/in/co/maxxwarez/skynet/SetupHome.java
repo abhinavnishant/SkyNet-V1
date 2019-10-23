@@ -50,8 +50,8 @@ public class SetupHome extends AppCompatActivity implements View.OnClickListener
             FirebaseUser currentUser = mAuth.getCurrentUser();
             final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
             String homeID = ref.child("home").push().getKey();
-            ref.child("users").child(currentUser.getUid()).child("home").child(homeID).child("Name").setValue(homeValue);
-            ref.child("users").child(currentUser.getUid()).child("home").child(homeID).child("ID").setValue(homeID);
+            ref.child("users").child(currentUser.getUid()).child("home").child(homeID).setValue(homeValue);
+          //  ref.child("users").child(currentUser.getUid()).child("home").child(homeID).child("ID").setValue(homeID);
             ref.child("homes").child(homeID).setValue(homeValue);
             return null;
         }
