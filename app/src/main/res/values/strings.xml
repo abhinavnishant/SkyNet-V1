@@ -86,6 +86,10 @@
     <string name="textview">TextView</string>
     <string name="add_config">Add Config</string>
     <string name="title_activity_device_config">DeviceConfig</string>
+    <string name="addInput">addInput</string>
+    <string name="addValue">addValue</string>
+    <string name="addOutput">Output</string>
+    <string name="addState">Add State</string>
 
 
 </resources>

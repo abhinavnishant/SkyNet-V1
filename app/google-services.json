@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "692996830-78c4a4dh757q1v2md2jdgomui4t5f8mo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "in.co.maxxwarez.skynet",
+            "certificate_hash": "c809ca447038863003a94c0f0cfd65d2ab5d9a6d"
+          }
+        },
+        {
           "client_id": "692996830-l2h7a214i3rvdromk5aklqc68eei49mn.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
