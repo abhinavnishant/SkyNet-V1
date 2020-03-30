@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -112,8 +113,9 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
     protected void onStart() {
         super.onStart();
         String ssID = "";
-        if (getConnState() == true) {
+        if (getConnState()) {
             ssID = getCurrentSSID();
+            Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + getConnState());
 
             if (ssID.contains("SkyNet-AutoConfig")) {
                 loadPage();
@@ -143,8 +145,10 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
 
     private void loadPage() {
+        Log.i(TAG, "My Logger loadPage: ");
 
         webView.loadUrl("http://192.168.4.1/");
+        //webView.loadUrl("https://192.168.0.1");
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String request) {
@@ -155,9 +159,45 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
     }
 
+    public void connectToWifi(){
+        try{
+            WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
+            WifiConfiguration wc = new WifiConfiguration();
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            wc.SSID = "\"SkyNet-AutoConfig\"";
+            wc.preSharedKey = "\"PASSWORD\"";
+            wc.status = WifiConfiguration.Status.ENABLED;
+            //wc.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+            wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 
-    public void connectToWifi() {
-        Log.i(TAG, "connectToWifi: ");
+            wifiManager.setWifiEnabled(true);
+            int netId = wifiManager.addNetwork(wc);
+            if (netId == -1) {
+                netId = getExistingNetworkId(wc.SSID);
+            }
+            wifiManager.disconnect();
+            wifiManager.enableNetwork(netId, true);
+            wifiManager.reconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getExistingNetworkId(String SSID) {
+        WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
+        if (configuredNetworks != null) {
+            for (WifiConfiguration existingConfig : configuredNetworks) {
+                if (existingConfig.SSID.equals(SSID)) {
+                    return existingConfig.networkId;
+                }
+            }
+        }
+        return -1;
+    }
+
+    public void connectToWifi0() {
+        Log.i(TAG, "My Logger connectToWifi: ");
 
         try {
             WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
@@ -174,13 +214,18 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
             wifiManager.enableNetwork(netId, true);
             wifiManager.reconnect();
 
-            boolean connectionState = getConnState();
-            if (connectionState == true) {
+            //boolean connectionState = getConnState();
+            Log.i(TAG, "My Logger connectToWifi:ConnectionState ");
+            if (getConnState()) {
                 String ssID = getCurrentSSID();
+                Log.i(TAG, "My Logger connectToWifi SSID: " + ssID);
                 if (ssID.contains("SkyNet-AutoConfig")) {
                     loadPage();
                     showButton();
                 } else {
+                    wifiManager.disconnect();
+                    wifiManager.enableNetwork(netId, true);
+                    wifiManager.reconnect();
                     showButton();
                 }
             } else {
@@ -210,13 +255,14 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
         WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
+        NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+        Log.i(TAG, "My Logger connectToWifi:getConnState " + networkInfo.getExtraInfo());
         if (networkInfo.isConnected()) {
-            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+           // final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+           // Log.i(TAG, "My Logger connectToWifi:getCurrentSSID final" + connectionInfo);
+           // if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.g)) {
                 state = true;
-            }
+            //}
         }
 
         return state;
@@ -227,15 +273,18 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         String ssid = "Not Connected";
         WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (networkInfo.isConnected()) {
+        //NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        NetworkInfo activeNetwork = connManager.getActiveNetworkInfo();
+
+        if (activeNetwork.isConnected()) {
             final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
             if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
-                ssid = connectionInfo.getSSID();
+                ssid = activeNetwork.getExtraInfo();
                 mSSID.setText(ssid);
             }
         }
         mSSID.setText(ssid);
+        Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + ssid);
         return ssid;
     }
 
@@ -245,13 +294,14 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         int i = v.getId();
         if (i == R.id.refresh) {
             Log.d(TAG, "My Logger onClick: Refresh");
-            //loadPage();
-            registerDevice("13304107");
+            loadPage();
+            //registerDevice();
+            //getData();
         }
         if (i == R.id.connect) {
-            //connectToWifi();
+            connectToWifi();
             Log.d(TAG, "My Logger onClick: Connect");
-            registerDevice("13304107");
+            //egisterDevice("13304107");
 
         }
 
@@ -313,9 +363,9 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         } finally {
             urlConnection.disconnect();
             Log.d(TAG, "My Logger ChipID 2 " + result);
-            registerDevice("13304107");
+            //registerDevice("13304107");
         }
-        //registerDevice(result);
+        registerDevice(result);
 
 
     }
