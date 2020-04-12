@@ -34,6 +34,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import android.content.Intent;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -48,6 +50,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
     protected Button btn_connect;
     private Object HttpURLConnection;
     private FirebaseAuth mAuth;
+    private String chipID;
 
 
     @Override
@@ -67,7 +70,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
+        webView.addJavascriptInterface(new WebAppInterface(this), "AndroidFunction");
         //mSSID.setText(getCurrentSSID());
         btn_refresh.setVisibility(View.GONE);
         btn_connect.setVisibility(View.GONE);
@@ -78,35 +81,35 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "My Logger On Destroy .....");
+        //Log.i(TAG, "My Logger On Destroy .....");
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.i(TAG, "My Logger On Pause .....");
+        //Log.i(TAG, "My Logger On Pause .....");
     }
 
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        Log.i(TAG, "My Logger On Restart .....");
+        //Log.i(TAG, "My Logger On Restart .....");
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "My Logger On Resume .....");
+        //Log.i(TAG, "My Logger On Resume .....");
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.i(TAG, "My Logger On Stop .....");
+       // Log.i(TAG, "My Logger On Stop .....");
     }
 
     @Override
@@ -115,7 +118,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         String ssID = "";
         if (getConnState()) {
             ssID = getCurrentSSID();
-            Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + getConnState());
+           // Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + getConnState());
 
             if (ssID.contains("SkyNet-AutoConfig")) {
                 loadPage();
@@ -145,10 +148,10 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
 
     private void loadPage() {
-        Log.i(TAG, "My Logger loadPage: ");
+        //Log.i(TAG, "My Logger loadPage: ");
+        chipID = getData();
 
         webView.loadUrl("http://192.168.4.1/");
-        //webView.loadUrl("https://192.168.0.1");
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String request) {
@@ -163,7 +166,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         try{
             WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
             WifiConfiguration wc = new WifiConfiguration();
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            //WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             wc.SSID = "\"SkyNet-AutoConfig\"";
             wc.preSharedKey = "\"PASSWORD\"";
             wc.status = WifiConfiguration.Status.ENABLED;
@@ -196,47 +199,6 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         return -1;
     }
 
-    public void connectToWifi0() {
-        Log.i(TAG, "My Logger connectToWifi: ");
-
-        try {
-            WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
-            WifiConfiguration wc = new WifiConfiguration();
-            wc.SSID = "\"SkyNet-AutoConfig\"";
-            //wc.preSharedKey = "\"PASSWORD\"";
-            wc.status = WifiConfiguration.Status.ENABLED;
-            wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-            //wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-
-            int netId = wifiManager.addNetwork(wc);
-            wifiManager.setWifiEnabled(true);
-            wifiManager.disconnect();
-            wifiManager.enableNetwork(netId, true);
-            wifiManager.reconnect();
-
-            //boolean connectionState = getConnState();
-            Log.i(TAG, "My Logger connectToWifi:ConnectionState ");
-            if (getConnState()) {
-                String ssID = getCurrentSSID();
-                Log.i(TAG, "My Logger connectToWifi SSID: " + ssID);
-                if (ssID.contains("SkyNet-AutoConfig")) {
-                    loadPage();
-                    showButton();
-                } else {
-                    wifiManager.disconnect();
-                    wifiManager.enableNetwork(netId, true);
-                    wifiManager.reconnect();
-                    showButton();
-                }
-            } else {
-                showButton();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     void showButton() {
         String connID = getCurrentSSID();
         if (connID.contains("SkyNet-AutoConfig")) {
@@ -256,7 +218,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         WifiManager wifiManager = (WifiManager) super.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         ConnectivityManager connManager = (ConnectivityManager) getApplicationContext().getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-        Log.i(TAG, "My Logger connectToWifi:getConnState " + networkInfo.getExtraInfo());
+        //Log.i(TAG, "My Logger connectToWifi:getConnState " + networkInfo.getExtraInfo());
         if (networkInfo.isConnected()) {
            // final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
            // Log.i(TAG, "My Logger connectToWifi:getCurrentSSID final" + connectionInfo);
@@ -284,7 +246,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
             }
         }
         mSSID.setText(ssid);
-        Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + ssid);
+        //Log.i(TAG, "My Logger connectToWifi:getCurrentSSID " + ssid);
         return ssid;
     }
 
@@ -293,14 +255,14 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
     public void onClick(View v) {
         int i = v.getId();
         if (i == R.id.refresh) {
-            Log.d(TAG, "My Logger onClick: Refresh");
+            //Log.d(TAG, "My Logger onClick: Refresh");
             loadPage();
             //registerDevice();
             //getData();
         }
         if (i == R.id.connect) {
             connectToWifi();
-            Log.d(TAG, "My Logger onClick: Connect");
+            //Log.d(TAG, "My Logger onClick: Connect");
             //egisterDevice("13304107");
 
         }
@@ -324,13 +286,13 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         @JavascriptInterface
         public void showToast() {
             //new GetData().execute();
-            getData();
-
-            Log.d(TAG, "My Logger WebAppInterface: ");
+            //getData();
+            registerDevice(chipID);
+            //Log.d(TAG, "My Logger WebAppInterface: ");
         }
     }
 
-    public void getData(){
+    public String getData(){
         java.net.HttpURLConnection urlConnection = null;
         String result = "";
         try {
@@ -338,10 +300,10 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
             urlConnection = (HttpURLConnection) url.openConnection();
 
             int code = urlConnection.getResponseCode();
-            Log.d(TAG, "My Logger ChipID 1 " + code);
+            //Log.d(TAG, "My Logger ChipID 4 " + code);
 
             if (code == 200) {
-                Log.d(TAG, "My Logger ChipID 122 " + code);
+                //Log.d(TAG, "My Logger ChipID 5 " + code);
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 if (in != null) {
                     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
@@ -353,7 +315,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
                 in.close();
                 //registerDevice(result);
             }
-            Log.d(TAG, "My Logger ChipID 1 " + result);
+            //Log.d(TAG, "My Logger ChipID 6 " + result);
 
 
         } catch (MalformedURLException e) {
@@ -362,18 +324,19 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
             e.printStackTrace();
         } finally {
             urlConnection.disconnect();
-            Log.d(TAG, "My Logger ChipID 2 " + result);
+            //Log.d(TAG, "My Logger ChipID 2 " + result);
             //registerDevice("13304107");
         }
-        registerDevice(result);
+        return(result);
 
 
     }
 
-    class GetData extends AsyncTask<String, Void, String> {
+    /*class GetData extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... params) {
+            Log.d(TAG, "My Logger AsyncTask  "  );
             java.net.HttpURLConnection urlConnection = null;
             String result = "";
             try {
@@ -382,7 +345,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
                 int code = urlConnection.getResponseCode();
 
-                Log.d(TAG, "My Logger ChipID 1 " + code);
+                //Log.d(TAG, "My Logger ChipID 1 " + code);
                 if (code == 200) {
                     InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                     if (in != null) {
@@ -395,7 +358,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
                     in.close();
                     registerDevice(result);
                 }
-                Log.d(TAG, "My Logger ChipID 1 " + result);
+                Log.d(TAG, "My Logger ChipID 2 " + result);
 
 
             } catch (MalformedURLException e) {
@@ -404,7 +367,7 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
                 e.printStackTrace();
             } finally {
                 urlConnection.disconnect();
-                Log.d(TAG, "My Logger ChipID 2 " + result);
+                Log.d(TAG, "My Logger ChipID 3 " + result);
             }
             //registerDevice(result);
             return result;
@@ -413,25 +376,25 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
         @Override
         protected void onPostExecute(String result) {
             if (result != "") {
-                Log.d(TAG, "My Logger Inside Post Execure" + result);
+                Log.d(TAG, "My Logger Inside Post Execute 0" + result);
                 registerDevice(result);
             }
 
-
-            Log.d(TAG, "My Logger Inside Post Execure" + result);
+            registerDevice(chipID);
+            Log.d(TAG, "My Logger Inside Post Execute 1" + result);
 
         }
 
 
-    }
+    }*/
 
     private void registerDevice(String chipID) {
-        Log.d(TAG, "My Logger registerDevice is" + chipID);
+        //Log.d(TAG, "My Logger registerDevice is" + chipID);
 
         mAuth = FirebaseAuth.getInstance();
-        Log.d(TAG, "My Logger: " + mAuth);
+        //Log.d(TAG, "My Logger: " + mAuth);
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        Log.d(TAG, "My Logger2: " + currentUser);
+        //Log.d(TAG, "My Logger2: " + currentUser);
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         //Query query = ref.child("users").child(currentUser.getUid());
         ref.child("users").child(currentUser.getUid()).child("deviceID").child(chipID).child("ID").setValue(chipID);
@@ -439,7 +402,9 @@ public class DeviceSetup extends AppCompatActivity implements View.OnClickListen
 
         ref.child("devicUsermap").child(chipID).setValue(currentUser.getUid());
 
-         Intent intent = new Intent(this, Home.class);
+         Intent intent = new Intent(this, SetLocation.class);
+         intent.putExtra("deviceID", chipID);
+
         startActivity(intent);
     }
 

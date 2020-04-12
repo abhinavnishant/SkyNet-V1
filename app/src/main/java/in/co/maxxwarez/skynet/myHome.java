@@ -26,6 +26,7 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "SkyNet";
     private TextView mHome;
     private TextView mDevice;
+    private String homeID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,7 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
         mHome = findViewById(R.id.textHome);
         mDevice = findViewById(R.id.textDevice);
         mAuth = FirebaseAuth.getInstance();
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         updateHome(currentUser);
         updateDevice(currentUser);
@@ -113,6 +115,7 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
                 if (dataSnapshot.exists()){
                     for (DataSnapshot home : dataSnapshot.getChildren()){
                         String buttonID = home.getKey();
+                        homeID = home.getKey();
                         String buttonName = (String) home.getValue();
                         createHome(buttonID, buttonName);
                     }
@@ -190,6 +193,7 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
      Intent intent = new Intent(this, DeviceDetail.class);
      intent.putExtra("buttonID", buttonID);
      intent.putExtra("buttonName", buttonName);
+     intent.putExtra("homeID", homeID );
      startActivity(intent);
 
  }

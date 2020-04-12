@@ -1,7 +1,7 @@
 package in.co.maxxwarez.skynet;
 
 import android.content.DialogInterface;
-import android.content.Intent;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +11,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,58 +20,41 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-public class DeviceConfig extends AppCompatActivity implements View.OnClickListener{
+import java.util.ArrayList;
+import java.util.List;
+
+public class DeviceConfig extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "SkyNet";
+    private FirebaseAuth mAuth;
+    public String homeID;
+    final List<Object> ipList = new ArrayList<>();
+    private String deviceID;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_device_config);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        String deviceID = (String) getIntent().getExtras().get("deviceID");
-        final String homeID = getIntent().getExtras().getString("homeID");
-        Log.i(TAG, "onCreate: " + deviceID + " " + homeID);
-
-        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        final Query query = ref.child("Device");
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(DataSnapshot device : dataSnapshot.getChildren()){
-                   // if(device.child("home").equals(homeID)){
-                        Log.i(TAG, "onDataChange: " + device.getKey() + device.child("home").getValue());
-                  //  }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
+        deviceID = (String) getIntent().getExtras().get("deviceID");
+        homeID = getIntent().getExtras().getString("homeID");
 
 
     }
+
     @Override
     public void onClick(View view) {
 
         int i = view.getId();
         if (i == R.id.addInput) {
-            Log.i(TAG, "Config: Add Input");
-            String[] colors = {"red", "green", "blue", "black"};
+            final String[] list = {"Your Devices", "External Sources", "Fixed Parameters"};
+            alertBuilder(list, "Select");
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Pick a color");
-            builder.setItems(colors, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // the user clicked on colors[which]
-                }
-            });
-            builder.show();
         } else if (i == R.id.addValue) {
             Log.i(TAG, "Config: Add Value");
         } else if (i == R.id.addOutput) {
@@ -78,7 +63,59 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             Log.i(TAG, "Config: Add State");
 
         }
+    }
 
+    public void prepareBuilder(String source, int sequence) {
+        final ArrayList<String> result = new ArrayList<>();
+        getChioceList(new MyCallback() {
+
+            @Override
+            public void onCallback(ArrayList<String> value) {
+
+               // alertBuilder(value, "");
+            }
+        }, source, sequence);
+    }
+
+    private void alertBuilder(final String[] list, String select) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(select);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                prepareBuilder(list[which], which);
+            }
+        });
+        builder.show();
+    }
+
+    public interface MyCallback{
+        void onCallback(ArrayList<String> value);
+    }
+
+
+    public void getChioceList(final MyCallback myCallback, final String source, int sequence) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").orderByChild("home").equalTo(homeID);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(dataSnapshots.getKey());
+                    //ipList.add(dataSnapshots.getKey());
+                    Log.i(TAG, "Config: get Input 3 " + source);
+                }
+                myCallback.onCallback(result);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
     }
 
 }

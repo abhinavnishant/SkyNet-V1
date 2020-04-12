@@ -23,6 +23,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class DeviceDetail extends AppCompatActivity implements View.OnClickListener {
     public FirebaseAuth mAuth;
     private TextView mTextView;
@@ -30,7 +33,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
     private Button mButton;
     private Button cButton;
     private static final String TAG = "SkyNet";
-    private String homeID;
+    public String homeID;
 
 
     @Override
@@ -52,6 +55,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         cButton = findViewById(R.id.addConfig);
         String id = getIntent().getExtras().get("buttonID").toString();
         String name = getIntent().getExtras().get("buttonName").toString();
+        homeID = getIntent().getExtras().get("homeID").toString();
         mTextView.setText(name);
         getDeviceHome(id);
         getDeviceDetails(id);
@@ -67,9 +71,12 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
         query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                //ArrayList<String> ipList = new ArrayList<String>();
                 for(DataSnapshot ip : dataSnapshot.getChildren()){
-                    Log.i(TAG, "onDataChange: " + ip.getKey() + " " + ip.getValue());
-                    createIPRows(ip.getKey(), ip.getValue().toString());
+                    Log.i(TAG, "onDataChange: " + ip.getKey() + " : " + ip.child("val").getValue() +" : " +ip.getValue());
+
+                    //ipList.add(ip.getKey() +":"+ ip.getValue());
+                    createIPRows(ip.getKey(), ip.child("val").getValue().toString());
                 }
             }
 

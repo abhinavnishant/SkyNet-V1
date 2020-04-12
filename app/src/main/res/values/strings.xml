@@ -1,5 +1,5 @@
 <resources>
-    <string name="title_activity_login">Login</string>
+    <string name="title_activity_login">SkyNet</string>
     <string name="app_name">SkyNet</string>
     <string name="title_text">Hookup to\nSkyNet</string>
     <!-- Custom Strings for Application -->
@@ -90,6 +90,7 @@
     <string name="addValue">addValue</string>
     <string name="addOutput">Output</string>
     <string name="addState">Add State</string>
+    <string name="set_location">Set Location</string>
 
 
 </resources>
