@@ -53,7 +53,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         int i = view.getId();
         if (i == R.id.addInput) {
             final String[] list = {"Your Devices", "External Sources", "Fixed Parameters"};
-            alertBuilder(list, "Select");
+            alertBuilder(list, "Select Source");
 
         } else if (i == R.id.addValue) {
             Log.i(TAG, "Config: Add Value");
@@ -65,22 +65,22 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void prepareBuilder(String source, int sequence) {
-        final ArrayList<String> result = new ArrayList<>();
+    public void prepareBuilder(String source, final int sequence) {
         getChioceList(new MyCallback() {
 
             @Override
-            public void onCallback(ArrayList<String> value) {
+            public void onCallback(String[] value) {
+                Log.i(TAG, "Config: Value " + value + " " + sequence);
 
-               // alertBuilder(value, "");
+                alertBuilder(value,"");
             }
         }, source, sequence);
     }
 
-    private void alertBuilder(final String[] list, String select) {
+    private void alertBuilder(final String[] list, String title) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(select);
+        builder.setTitle(title);
         builder.setItems(list, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -91,7 +91,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
     }
 
     public interface MyCallback{
-        void onCallback(ArrayList<String> value);
+        void onCallback(String[] value);
     }
 
 
@@ -106,10 +106,13 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
 
                 for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
                     result.add(dataSnapshots.getKey());
+                    //str[0] = (String[]) result.toArray();
                     //ipList.add(dataSnapshots.getKey());
-                    Log.i(TAG, "Config: get Input 3 " + source);
+
+
                 }
-                myCallback.onCallback(result);
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
             }
 
             @Override
