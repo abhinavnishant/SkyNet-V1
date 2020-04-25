@@ -91,6 +91,7 @@
     <string name="addOutput">Output</string>
     <string name="addState">Add State</string>
     <string name="set_location">Set Location</string>
+    <string name="add_operator">Add Operator</string>
 
 
 </resources>

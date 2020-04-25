@@ -5,6 +5,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -23,12 +26,21 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import static in.co.maxxwarez.skynet.R.id.addOperator;
+
 public class DeviceConfig extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "SkyNet";
     private FirebaseAuth mAuth;
     public String homeID;
     final List<Object> ipList = new ArrayList<>();
     private String deviceID;
+    private TextView mAddInput;
+    private String addInput;
+    private String addInputType;
+    private TextView mAddValue;
+    private int mOperatorType;
+    private TextView operatorType;
+    private Boolean swState;
 
 
     @Override
@@ -36,6 +48,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_device_config);
+        //setContentView(mAddInput);
         Toolbar toolbar = findViewById(R.id.toolbar);
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -43,6 +56,10 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         deviceID = (String) getIntent().getExtras().get("deviceID");
         homeID = getIntent().getExtras().getString("homeID");
+        mAddInput = findViewById(R.id.addInput);
+        mAddValue = findViewById(R.id.addValue);
+        operatorType = findViewById(addOperator);
+        //mAddInput.setText("test");
 
 
     }
@@ -56,59 +73,59 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             alertBuilder(list, "Select Source");
 
         } else if (i == R.id.addValue) {
+            if(addInputType == "sensor"){
+                addSensorValue();
+            }
+            if(addInputType == "switch")
+                addSwitchValue();
+
             Log.i(TAG, "Config: Add Value");
         } else if (i == R.id.addOutput) {
             Log.i(TAG, "Config: Add Output");
         } else if (i == R.id.addState) {
             Log.i(TAG, "Config: Add State");
-
+        }else if (i == addOperator) {
+            if(addInputType == "switch"){
+                operatorType.setText("Equals");
+            }
+            if(addInputType == "sensor"){
+                final String[] list = {"Equals", "Less Than", "Greater Than", "Between"};
+                alertBuilderOperator(list, "Select Operator");
+            }
         }
     }
 
-    public void prepareBuilder(String source, final int sequence) {
-        getChioceList(new MyCallback() {
-
-            @Override
-            public void onCallback(String[] value) {
-                Log.i(TAG, "Config: Value " + value + " " + sequence);
-
-                alertBuilder(value,"");
-            }
-        }, source, sequence);
-    }
-
-    private void alertBuilder(final String[] list, String title) {
-
+    private void addSwitchValue() {
+        final String[] list = {"Off", "On"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(title);
+        builder.setTitle("Select State");
         builder.setItems(list, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                prepareBuilder(list[which], which);
+                if(which == 0){
+                    swState = false;
+                    mAddValue.setText("OFF");
+                }
+                if(which == 1){
+                    swState = true;
+                    mAddValue.setText("ON");
+                }
             }
         });
         builder.show();
     }
 
-    public interface MyCallback{
-        void onCallback(String[] value);
-    }
-
-
-    public void getChioceList(final MyCallback myCallback, final String source, int sequence) {
+    public void getSwitchValue(final MyCallback myCallback, String s) {
         final ArrayList<String> result = new ArrayList<>();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        Query query = ref.child("Device").orderByChild("home").equalTo(homeID);
+        Query query = ref.child("Device").child(s).child("State").child(addInput);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
-                    result.add(dataSnapshots.getKey());
-                    //str[0] = (String[]) result.toArray();
-                    //ipList.add(dataSnapshots.getKey());
-
+                    result.add(String.valueOf(dataSnapshots.getValue()));
 
                 }
                 String frnames[]=result.toArray(new String[result.size()]);
@@ -120,5 +137,273 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
+    public void addSensorValue(){
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Title");
+        alert.setMessage("Message :");
+
+// Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        alert.setView(input);
+        getSensorValue(new MyCallback() {
+
+            @Override
+            public void onCallback(String[] value) {
+
+                input.setText(value[1]);
+            }
+        }, deviceID);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                mAddValue.setText(value);
+                Log.i(TAG, "Config Pin Value : " + value);
+                return;
+            }
+        });
+
+        alert.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        String value = input.getText().toString();
+                        Log.d(TAG, "Config Pin Value : " + value);
+                        // TODO Auto-generated method stub
+                        return;
+                    }
+                });
+        alert.show();
+    }
+
+
+
+    public void prepareBuilder(String source, final int sequence) {
+        getDeviceList(new MyCallback() {
+
+            @Override
+            public void onCallback(String[] value) {
+                Log.i(TAG, "Config: Value " + value + " " + sequence);
+
+                alertBuilder(value,"");
+            }
+        });
+    }
+
+    private void alertBuilderOperator(final String[] list, String title) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(which == 0) {
+                    mOperatorType = 0;
+                }
+                if(which==1){
+                    mOperatorType = -1;
+                }
+                if(which == 2){
+                    mOperatorType = 1;
+                }
+                if(which == 3){
+                    mOperatorType = 2;
+                }
+                operatorType.setText(list[which]);
+
+            }
+        });
+        builder.show();
+    }
+
+    private void alertBuilder(final String[] list, String title) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                getDeviceList(new MyCallback() {
+
+                    @Override
+                    public void onCallback(String[] value) {
+
+                        alertBuilderDevice(value,"Device List");
+                    }
+                });
+
+            }
+        });
+        builder.show();
+    }
+
+    private void alertBuilderDevice(final String[] list, String title) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                alertBuilderSource(list[which]);
+                /*getIPList(new MyCallback() {
+
+                    @Override
+                    public void onCallback(String[] value) {
+
+                        alertBuilderIP(value,"IP List");
+                    }
+                }, list[which]);*/
+
+            }
+        });
+        builder.show();
+    }
+
+    private void alertBuilderSource(final String s) {
+        final String[] list = {"Sensor", "Switch"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Channel");
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(which == 0){
+                    getSRList(new MyCallback() {
+
+                        @Override
+                        public void onCallback(String[] value) {
+
+                            alertBuilderIP(value,"Sensor List", "sensor");
+                        }
+                    }, s);
+                }
+                if(which == 1){
+                    getSWList(new MyCallback() {
+
+                        @Override
+                        public void onCallback(String[] value) {
+
+                            alertBuilderIP(value,"Switch List", "switch");
+                        }
+                    }, s);
+
+                }
+
+            }
+        });
+        builder.show();
+    }
+    private void alertBuilderIP(final String[] list, String title, final String ipType) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.i(TAG, "Config: Selection " + list[which]);
+                addInput = list[which];
+                addInputType = ipType;
+                mAddInput.setText(list[which] );
+
+
+            }
+        });
+        builder.show();
+    }
+    public interface MyCallback{
+        void onCallback(String[] value);
+    }
+
+
+    public void getDeviceList(final MyCallback myCallback) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").orderByChild("home").equalTo(homeID);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(dataSnapshots.getKey());
+                }
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public void getSWList(final MyCallback myCallback, String s) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").child(s).child("State");
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(dataSnapshots.getKey());
+
+                }
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+    public void getSRList(final MyCallback myCallback, String s) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").child(s).child("Data");
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(dataSnapshots.getKey());
+
+                }
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public void getSensorValue(final MyCallback myCallback, String s) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").child(s).child("Data").child(addInput);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(String.valueOf(dataSnapshots.getValue()));
+
+                }
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
 
 }
