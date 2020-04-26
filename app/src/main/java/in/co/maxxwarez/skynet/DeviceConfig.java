@@ -26,6 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import static in.co.maxxwarez.skynet.R.id.addConfig;
 import static in.co.maxxwarez.skynet.R.id.addOperator;
 
 public class DeviceConfig extends AppCompatActivity implements View.OnClickListener {
@@ -41,6 +42,10 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
     private int mOperatorType;
     private TextView operatorType;
     private Boolean swState;
+    private TextView mAddOP;
+    private String addOP;
+    private Boolean addState;
+    private TextView mAddState;
 
 
     @Override
@@ -59,6 +64,8 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         mAddInput = findViewById(R.id.addInput);
         mAddValue = findViewById(R.id.addValue);
         operatorType = findViewById(addOperator);
+        mAddOP = findViewById(R.id.addOutput);
+        mAddState = findViewById(R.id.addState);
         //mAddInput.setText("test");
 
 
@@ -70,21 +77,34 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         int i = view.getId();
         if (i == R.id.addInput) {
             final String[] list = {"Your Devices", "External Sources", "Fixed Parameters"};
-            alertBuilder(list, "Select Source");
+            alertBuilderIP(list, "Select Source");
+        }
 
-        } else if (i == R.id.addValue) {
+        else if (i == R.id.addValue) {
             if(addInputType == "sensor"){
                 addSensorValue();
             }
             if(addInputType == "switch")
                 addSwitchValue();
+        }
 
-            Log.i(TAG, "Config: Add Value");
-        } else if (i == R.id.addOutput) {
-            Log.i(TAG, "Config: Add Output");
-        } else if (i == R.id.addState) {
+        else if (i == R.id.addOutput) {
+            getDeviceListOP(new MyCallback() {
+
+                @Override
+                public void onCallback(String[] value) {
+
+                    alertBuilderOP(value,"Device List");
+                }
+            });
+        }
+
+        else if (i == R.id.addState) {
+            addSwitchState();
             Log.i(TAG, "Config: Add State");
-        }else if (i == addOperator) {
+        }
+
+        else if (i == addOperator) {
             if(addInputType == "switch"){
                 operatorType.setText("Equals");
             }
@@ -93,6 +113,14 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
                 alertBuilderOperator(list, "Select Operator");
             }
         }
+        
+        else if (i == addConfig){
+            addConfig();
+        }
+    }
+
+    private void addConfig() {
+        //TODO Add Update to Firebase DB
     }
 
     private void addSwitchValue() {
@@ -109,6 +137,26 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
                 if(which == 1){
                     swState = true;
                     mAddValue.setText("ON");
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void addSwitchState() {
+        final String[] list = {"Off", "On"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select State");
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(which == 0){
+                    addState = false;
+                    mAddState.setText("OFF");
+                }
+                if(which == 1){
+                    addState = true;
+                    mAddState.setText("ON");
                 }
             }
         });
@@ -176,8 +224,6 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         alert.show();
     }
 
-
-
     public void prepareBuilder(String source, final int sequence) {
         getDeviceList(new MyCallback() {
 
@@ -185,7 +231,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             public void onCallback(String[] value) {
                 Log.i(TAG, "Config: Value " + value + " " + sequence);
 
-                alertBuilder(value,"");
+                //alertBuilder(value,"");
             }
         });
     }
@@ -216,7 +262,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         builder.show();
     }
 
-    private void alertBuilder(final String[] list, String title) {
+    private void alertBuilderIP(final String[] list, String title) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
@@ -231,6 +277,27 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
                         alertBuilderDevice(value,"Device List");
                     }
                 });
+
+            }
+        });
+        builder.show();
+    }
+
+    private void alertBuilderOP(final String[] list, String title) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                getSWList(new MyCallback() {
+
+                    @Override
+                    public void onCallback(String[] value) {
+
+                        alertBuilderOPSW(value,"Switch List", "switch");
+                    }
+                }, list[which]);
 
             }
         });
@@ -293,6 +360,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
+
     private void alertBuilderIP(final String[] list, String title, final String ipType) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -310,12 +378,47 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
+    private void alertBuilderOPSW(final String[] list, String title, final String ipType) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(list, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.i(TAG, "Config: Selection " + list[which]);
+                mAddOP.setText(list[which] );
+                addOP = list[which];
+            }
+        });
+        builder.show();
+    }
     public interface MyCallback{
         void onCallback(String[] value);
     }
 
-
     public void getDeviceList(final MyCallback myCallback) {
+        final ArrayList<String> result = new ArrayList<>();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        Query query = ref.child("Device").orderByChild("home").equalTo(homeID);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
+                    result.add(dataSnapshots.getKey());
+                }
+                String frnames[]=result.toArray(new String[result.size()]);
+                myCallback.onCallback(frnames);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public void getDeviceListOP(final MyCallback myCallback) {
         final ArrayList<String> result = new ArrayList<>();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         Query query = ref.child("Device").orderByChild("home").equalTo(homeID);
@@ -359,6 +462,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
     public void getSRList(final MyCallback myCallback, String s) {
         final ArrayList<String> result = new ArrayList<>();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
