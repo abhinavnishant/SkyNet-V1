@@ -46,6 +46,8 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
     private String addOP;
     private Boolean addState;
     private TextView mAddState;
+    private String sourceDevice;
+    private String destDevice;
 
 
     @Override
@@ -76,8 +78,17 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
 
         int i = view.getId();
         if (i == R.id.addInput) {
+
             final String[] list = {"Your Devices", "External Sources", "Fixed Parameters"};
-            alertBuilderIP(list, "Select Source");
+           // alertBuilderIP(list, "Select Source");
+            getSRList(new MyCallback() {
+
+                @Override
+                public void onCallback(String[] value) {
+                    Log.i(TAG, "Result Value " + value);
+                    //alertBuilderIP(value,"Sensor List", "sensor");
+                }
+            }, "s");
         }
 
         else if (i == R.id.addValue) {
@@ -121,6 +132,21 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
 
     private void addConfig() {
         //TODO Add Update to Firebase DB
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        String logicID = ref.child("logics").push().getKey();
+        ref.child("logics").child(logicID).child("test").setValue("test");
+        Log.i(TAG, "Config Push "  + logicID + " " + addInputType) ;
+        if(addInputType == "switch"){
+            logicID = ref.child("logic").push().getKey();
+            ref.child("Device").child(sourceDevice).child("State").child(addInput).child("logic").child(logicID).setValue(true);
+            Log.i(TAG, "Config Logic Value SW: " + destDevice + " " + addOP + " " + addInput + " " + logicID);
+        }
+        if(addInputType == "sensor"){
+            ref.child("Device").child(sourceDevice).child("Data").child(addInput).child("logic").child(logicID);
+            Log.i(TAG, "Config Logic Value SR: " + destDevice + " " + addOP + " "  + " " + logicID);
+        }
+
+
     }
 
     private void addSwitchValue() {
@@ -290,6 +316,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         builder.setItems(list, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                destDevice = list[which];
                 getSWList(new MyCallback() {
 
                     @Override
@@ -313,6 +340,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
             public void onClick(DialogInterface dialog, int which) {
 
                 alertBuilderSource(list[which]);
+                sourceDevice = list[which];
                 /*getIPList(new MyCallback() {
 
                     @Override
@@ -466,7 +494,7 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
     public void getSRList(final MyCallback myCallback, String s) {
         final ArrayList<String> result = new ArrayList<>();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        Query query = ref.child("Device").child(s).child("Data");
+        Query query = ref.child("Device").child(deviceID).child("Data");
         query.addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
