@@ -1,11 +1,9 @@
 package in.co.maxxwarez.skynet;
 
 import android.content.DialogInterface;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -24,7 +22,9 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static in.co.maxxwarez.skynet.R.id.addConfig;
 import static in.co.maxxwarez.skynet.R.id.addOperator;
@@ -80,15 +80,8 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
         if (i == R.id.addInput) {
 
             final String[] list = {"Your Devices", "External Sources", "Fixed Parameters"};
-           // alertBuilderIP(list, "Select Source");
-            getSRList(new MyCallback() {
+           alertBuilderIP(list, "Select Source");
 
-                @Override
-                public void onCallback(String[] value) {
-                    Log.i(TAG, "Result Value " + value);
-                    //alertBuilderIP(value,"Sensor List", "sensor");
-                }
-            }, "s");
         }
 
         else if (i == R.id.addValue) {
@@ -494,15 +487,23 @@ public class DeviceConfig extends AppCompatActivity implements View.OnClickListe
     public void getSRList(final MyCallback myCallback, String s) {
         final ArrayList<String> result = new ArrayList<>();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        Query query = ref.child("Device").child(deviceID).child("Data");
+        Query query = ref.child("Device").child("123456");
         query.addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 for (DataSnapshot dataSnapshots : dataSnapshot.getChildren()) {
-                    result.add(dataSnapshots.getKey());
+                    //JSONObject response = (JSONObject) dataSnapshot.getChildren();
+                    //result.add(dataSnapshots.getKey());
+                    result.add(String.valueOf(dataSnapshots.getValue()));
+                    Map<String,String> td=(HashMap<String, String>)dataSnapshot.child("data").getValue();
+                    Log.i(TAG, "Config Data Value " + td );
+                    //Data data = dataSnapshot.getValue(Data.class);
 
+                    Log.i(TAG, "Config Data Class "  + " " + result );
+
+                    //result.add(data);
                 }
                 String frnames[]=result.toArray(new String[result.size()]);
                 myCallback.onCallback(frnames);

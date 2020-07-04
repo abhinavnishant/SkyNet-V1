@@ -23,9 +23,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
 public class DeviceDetail extends AppCompatActivity implements View.OnClickListener {
     public FirebaseAuth mAuth;
     private TextView mTextView;
@@ -257,7 +254,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
         }
         if (i == R.id.addConfig) {
-           Intent intent = new Intent(this, DeviceConfig.class);
+           Intent intent = new Intent(this, tmp.class);
            intent.putExtra("deviceID", getIntent().getExtras().get("buttonName").toString());
            intent.putExtra("homeID", homeID);
            startActivity(intent);
