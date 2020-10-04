@@ -254,7 +254,7 @@ public class DeviceDetail extends AppCompatActivity implements View.OnClickListe
 
         }
         if (i == R.id.addConfig) {
-           Intent intent = new Intent(this, tmp.class);
+           Intent intent = new Intent(this, DeviceConfig.class);
            intent.putExtra("deviceID", getIntent().getExtras().get("buttonName").toString());
            intent.putExtra("homeID", homeID);
            startActivity(intent);
