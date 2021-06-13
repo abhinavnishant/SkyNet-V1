@@ -8,6 +8,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -16,10 +20,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 public class myHome extends AppCompatActivity implements View.OnClickListener {
     private FirebaseAuth mAuth;
@@ -113,12 +113,13 @@ public class myHome extends AppCompatActivity implements View.OnClickListener {
             public void onDataChange(DataSnapshot dataSnapshot)
             {
                 if (dataSnapshot.exists()){
-                    for (DataSnapshot home : dataSnapshot.getChildren()){
-                        String buttonID = home.getKey();
-                        homeID = home.getKey();
-                        String buttonName = (String) home.getValue();
-                        createHome(buttonID, buttonName);
-                    }
+//                    for (DataSnapshot home : dataSnapshot.getChildren()){
+//                        String buttonID = home.getKey();
+//                        homeID = home.getKey();
+//                        String buttonName = (String) home.getValue();
+//                        createHome(buttonID, buttonName);
+//                    }
+
                 }
             }
             @Override

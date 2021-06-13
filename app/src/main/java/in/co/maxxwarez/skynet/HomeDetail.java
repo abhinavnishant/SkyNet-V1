@@ -57,9 +57,9 @@ public class HomeDetail extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()){
-                    if(data.child("home").getValue().equals(id)){
+                  //  if(data.child("home").getValue().equals(id)){
                         createDevice(data.getKey());
-                    }
+                  //  }
                 }
             }
 
